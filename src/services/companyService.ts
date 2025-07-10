@@ -21,7 +21,6 @@ export interface CreateCompanyData {
   customfavicon?: string;
   customfooterhtml?: string;
   customheaderhtml?: string;
-  customcss?: string;
   hostname?: string;
   emailprofileid?: number;
   suspended?: boolean;
@@ -29,6 +28,9 @@ export interface CreateCompanyData {
   companydomains?: string[];
   companycourses?: number[];
   companymanagers?: number[];
+  logofile?: File;
+  headerlogofile?: File;
+  faviconfile?: File;
 }
 
 export interface CompanyResponse {
@@ -50,15 +52,116 @@ export interface CompanyResponse {
   timemodified: number;
 }
 
+export interface ThemeOption {
+  value: string;
+  name: string;
+  description: string;
+  preview: string;
+  features: string[];
+}
+
+export const availableThemes: ThemeOption[] = [
+  {
+    value: '',
+    name: 'Default Theme',
+    description: 'Standard IOMAD theme with clean design',
+    preview: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400',
+    features: ['Responsive Design', 'Standard Colors', 'Basic Customization']
+  },
+  {
+    value: 'boost',
+    name: 'Boost Theme',
+    description: 'Modern and dynamic theme with enhanced features',
+    preview: 'https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=400',
+    features: ['Modern Design', 'Enhanced Navigation', 'Mobile Optimized']
+  },
+  {
+    value: 'classic',
+    name: 'Classic Theme',
+    description: 'Traditional academic theme with professional look',
+    preview: 'https://images.pexels.com/photos/3184293/pexels-photo-3184293.jpeg?auto=compress&cs=tinysrgb&w=400',
+    features: ['Professional Look', 'Academic Style', 'Traditional Layout']
+  },
+  {
+    value: 'more',
+    name: 'More Theme',
+    description: 'Feature-rich theme with advanced customization',
+    preview: 'https://images.pexels.com/photos/3184294/pexels-photo-3184294.jpeg?auto=compress&cs=tinysrgb&w=400',
+    features: ['Advanced Features', 'Rich Customization', 'Interactive Elements']
+  }
+];
 export const companyService = {
+  async uploadFile(file: File, context: string = 'company'): Promise<string> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('contextid', '1');
+      formData.append('component', 'block_iomad_company_admin');
+      formData.append('filearea', context);
+      formData.append('itemid', '0');
+      formData.append('filepath', '/');
+      formData.append('filename', file.name);
+
+      const response = await axios.post(API_BASE_URL, formData, {
+        params: {
+          wstoken: API_TOKEN,
+          wsfunction: 'core_files_upload',
+          moodlewsrestformat: 'json'
+        },
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data && response.data.length > 0) {
+        return response.data[0].url;
+      } else {
+        throw new Error('Failed to upload file');
+      }
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      throw new Error('Failed to upload file. Please try again.');
+    }
+  },
+
   async createCompany(companyData: CreateCompanyData): Promise<CompanyResponse> {
     try {
+      // Upload files if provided
+      const processedData = { ...companyData };
+      
+      if (companyData.logofile) {
+        try {
+          processedData.customlogo = await this.uploadFile(companyData.logofile, 'logo');
+        } catch (error) {
+          console.warn('Logo upload failed, continuing without logo');
+        }
+        delete processedData.logofile;
+      }
+      
+      if (companyData.headerlogofile) {
+        try {
+          processedData.customheaderlogo = await this.uploadFile(companyData.headerlogofile, 'headerlogo');
+        } catch (error) {
+          console.warn('Header logo upload failed, continuing without header logo');
+        }
+        delete processedData.headerlogofile;
+      }
+      
+      if (companyData.faviconfile) {
+        try {
+          processedData.customfavicon = await this.uploadFile(companyData.faviconfile, 'favicon');
+        } catch (error) {
+          console.warn('Favicon upload failed, continuing without favicon');
+        }
+        delete processedData.faviconfile;
+      }
+
       const response = await axios.post(API_BASE_URL, null, {
         params: {
           wstoken: API_TOKEN,
           wsfunction: 'block_iomad_company_admin_create_companies',
           moodlewsrestformat: 'json',
-          companies: JSON.stringify([companyData])
+          companies: JSON.stringify([processedData])
         }
       });
 
