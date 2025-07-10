@@ -19,6 +19,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
+import { CreateSchoolModal } from '../components/modals/CreateSchoolModal';
 
 import { School } from '../types';
 
@@ -29,6 +30,7 @@ export const SchoolsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     const fetchSchools = async () => {
@@ -95,6 +97,11 @@ export const SchoolsPage: React.FC = () => {
     setFilteredSchools(filtered);
   }, [schools, searchTerm]);
 
+  const handleCreateSuccess = (newSchool: School) => {
+    setSchools(prev => [newSchool, ...prev]);
+    setFilteredSchools(prev => [newSchool, ...prev]);
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -141,7 +148,10 @@ export const SchoolsPage: React.FC = () => {
             </p>
           </div>
           
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
+          <Button 
+            className="bg-gradient-to-r from-blue-600 to-purple-600"
+            onClick={() => setShowCreateModal(true)}
+          >
             <Plus className="w-4 h-4" />
             Add School
           </Button>
@@ -325,6 +335,13 @@ export const SchoolsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Create School Modal */}
+      <CreateSchoolModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateSuccess}
+      />
     </DashboardLayout>
   );
 };

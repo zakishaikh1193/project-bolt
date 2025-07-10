@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { User, Course, UserRole } from '../types';
+import { companyService } from './companyService';
 
 const API_BASE_URL = 'https://iomad.bylinelms.com/webservice/rest/server.php';
 const API_TOKEN = '4a2ba2d6742afc7d13ce4cf486ba7633';
@@ -291,6 +292,12 @@ export const apiService = {
       throw new Error('Failed to fetch companies');
     }
   },
+
+  // Company/School management methods
+  createCompany: companyService.createCompany,
+  updateCompany: companyService.updateCompany,
+  deleteCompany: companyService.deleteCompany,
+  getCompanyDetails: companyService.getCompanyDetails,
 
   async createUser(userData: any): Promise<User | null> {
     try {
