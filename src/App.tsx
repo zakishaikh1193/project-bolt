@@ -49,7 +49,18 @@ function App() {
                   }
                 />
                 <Route
-                  path="/schools"
+                  path="SELECT 
+    c.id AS company_id,
+    c.name AS company_name,
+    COUNT(ct.id) AS contact_count
+FROM 
+    companies c
+JOIN 
+    contacts ct ON ct.company_id = c.id
+GROUP BY 
+    c.id, c.name
+ORDER BY 
+    contact_count DESC"
                   element={
                     <ProtectedRoute>
                       <SchoolsPage />
